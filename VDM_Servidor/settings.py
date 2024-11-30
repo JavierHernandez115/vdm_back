@@ -158,6 +158,9 @@ CORS_ALLOW_HEADERS = [
 
 SECURE_FRAME_DENY = False
 
+access-control-allow-credentials: true
+
+
 CORS_ALLOW_METHODS = (
     "DELETE",
     "GET",
