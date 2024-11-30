@@ -1,1 +1,1 @@
-web: gunicorn VDM_Servidor.wsgi
+web: python manage.py collectstatic && gunicorn VDM_Servidor.wsgi
