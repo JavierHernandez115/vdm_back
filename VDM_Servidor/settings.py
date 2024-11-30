@@ -144,7 +144,7 @@ STORAGES = {
 CSRF_TRUSTED_ORIGINS = ['http://*','https://web-production-8f9d.up.railway.app']
 
 
-
+CORS_ALLOWED_ORIGINS = ['http://*']
 CORS_ALLOW_ALL_ORIGINS = True
 
 CORS_ALLOW_METHODS = (
