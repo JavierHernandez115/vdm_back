@@ -158,6 +158,9 @@ CORS_ALLOW_HEADERS = [
     "x-csrftoken",
     "x-requested-with",
 ]
+
+SECURE_FRAME_DENY = False
+
 CORS_ALLOW_METHODS = (
     "DELETE",
     "GET",
