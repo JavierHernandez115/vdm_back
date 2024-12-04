@@ -2,12 +2,32 @@
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
+from datetime import datetime
 from .models import Empleado, Asistencia, Vacacion, VacacionTomada, Salario, Prestamo, Abono, Pago
 from .serializers import (
     EmpleadoSerializer, AsistenciaSerializer, VacacionSerializer, VacacionTomadaSerializer,
     SalarioSerializer, PrestamoSerializer, AbonoSerializer, PagoSerializer
 )
 from django.shortcuts import get_object_or_404
+
+
+#Asistencias por fechas
+@api_view(['GET'])
+def asistencia_por_fecha(request, fecha):
+    try:
+        # Convertir la fecha del parámetro a un objeto datetime para mayor seguridad
+        fecha_objeto = datetime.strptime(fecha, '%Y-%m-%d').date()
+    except ValueError:
+        return Response(
+            {"error": "El formato de la fecha debe ser YYYY-MM-DD"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    # Filtrar las asistencias por la fecha específica
+    asistencias = Asistencia.objects.filter(fecha=fecha_objeto)
+    serializer = AsistenciaSerializer(asistencias, many=True)
+    return Response(serializer.data)
+
 
 # CRUD para Empleados
 @api_view(['GET', 'POST'])

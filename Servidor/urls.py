@@ -9,6 +9,8 @@ urlpatterns = [
     # CRUD para Asistencias
     path('asistencias/', views.asistencia_list, name='asistencia-list'),
     path('asistencias/<int:pk>/', views.asistencia_detail, name='asistencia-detail'),
+    #Asistencias por fecha
+    path('asistencias/<str:fecha>/', views.asistencia_por_fecha, name='asistencia_por_fecha'),
 
     # CRUD para Vacaciones
     path('vacaciones/', views.vacacion_list, name='vacacion-list'),
