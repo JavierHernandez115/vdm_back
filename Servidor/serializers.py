@@ -47,6 +47,7 @@ class AbonoSerializer(serializers.ModelSerializer):
 
 class PagoSerializer(serializers.ModelSerializer):
     nombre_empleado = serializers.CharField(source='empleado.nombre', read_only=True)
+    detalle = serializers.JSONField()
     class Meta:
         model = Pago
         fields = '__all__'

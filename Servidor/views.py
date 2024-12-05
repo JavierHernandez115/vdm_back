@@ -3,12 +3,110 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 from datetime import datetime
+from datetime import date, timedelta
+from decimal import Decimal
+from django.db import transaction
 from .models import Empleado, Asistencia, Vacacion, VacacionTomada, Salario, Prestamo, Abono, Pago
 from .serializers import (
     EmpleadoSerializer, AsistenciaSerializer, VacacionSerializer, VacacionTomadaSerializer,
     SalarioSerializer, PrestamoSerializer, AbonoSerializer, PagoSerializer
 )
 from django.shortcuts import get_object_or_404
+
+
+#Generar Pago
+@api_view(['POST'])
+# Función para registrar pago
+def registrar_pago(request, empleado_id):
+    try:
+        empleado = Empleado.objects.get(id=empleado_id)
+    except Empleado.DoesNotExist:
+        return Response({"error": "Empleado no encontrado."}, status=status.HTTP_404_NOT_FOUND)
+
+    # Obtener el salario semanal del empleado
+    try:
+        salario = empleado.salario_set.latest('created_at')  # Asumiendo que hay un salario activo
+    except Salario.DoesNotExist:
+        return Response({"error": "No se encontró salario registrado para el empleado."}, status=status.HTTP_404_NOT_FOUND)
+
+    # Calcular faltas (de miércoles a lunes) excluyendo el martes como día de descanso
+    fecha_fin = date.today() - timedelta(days=1)  # Día anterior al pago (lunes)
+    fecha_inicio = fecha_fin - timedelta(days=4)  # Miércoles anterior
+    asistencias = Asistencia.objects.filter(empleado=empleado, fecha__range=(fecha_inicio, fecha_fin)).exclude(
+        fecha__week_day=3  # Excluir martes (día 3 en datetime.weekday)
+    )
+    faltas = asistencias.filter(asistencia=False).count()
+    descuento_por_faltas = faltas * (salario.sueldo_semanal / Decimal(6))  # Sueldo dividido por 6 días laborables
+
+    # Calcular abonos a préstamos
+    prestamos_activos = Prestamo.objects.filter(empleado=empleado, estatus='True')
+    total_abonos = Decimal(0)
+    detalle_prestamos = []
+    for prestamo in prestamos_activos:
+        abono = prestamo.abono_semanal
+
+        if prestamo.deuda_restante <= abono:
+            abono = prestamo.deuda_restante  # Ajustar abono si es mayor a la deuda restante
+            prestamo.deuda_restante = Decimal(0)  # La deuda queda saldada
+            prestamo.estatus = 'False'  # Cambiar estado a saldado
+        else:
+            prestamo.deuda_restante -= abono  # Reducir deuda restante
+
+        # Guardar cambios en el préstamo
+        prestamo.save()
+
+        # Crear registro de abono con la deuda restante actualizada
+        Abono.objects.create(
+            prestamo=prestamo,
+            empleado=empleado,
+            monto_abono=abono,
+            fecha_abono=date.today(),
+            deuda_restante=prestamo.deuda_restante  # Usar el valor actual de deuda restante
+        )
+
+        # Registrar detalle para reporte
+        total_abonos += abono
+        detalle_prestamos.append({
+            "prestamo_id": prestamo.id,
+            "monto_abonado": str(abono),
+            "monto_restante": str(prestamo.deuda_restante),
+            "razon": prestamo.razon
+        })
+
+    # Calcular monto total del pago
+    monto_a_pagar = salario.sueldo_semanal - descuento_por_faltas - total_abonos
+
+    # Generar desglose
+    detalle = {
+        "faltas": {
+            "dias_faltados": faltas,
+            "descuento": str(descuento_por_faltas)
+        },
+        "prestamos": detalle_prestamos,
+        "total_abonos": str(total_abonos),
+        "sueldo_base": str(salario.sueldo_semanal),
+        "total_pagado": str(monto_a_pagar)
+    }
+
+    # Guardar el pago
+    pago = Pago.objects.create(
+        empleado=empleado,
+        monto_a_pagar=monto_a_pagar,
+        fecha_pago=date.today(),
+        detalle=detalle
+    )
+
+    return Response({
+        "mensaje": "Pago registrado correctamente.",
+        "pago": {
+            "id": pago.id,
+            "monto_a_pagar": pago.monto_a_pagar,
+            "detalle": pago.detalle,
+            "fecha_pago": pago.fecha_pago
+        }
+    }, status=status.HTTP_201_CREATED)
+
+
 
 #Pagos por empleados
 @api_view(['GET'])

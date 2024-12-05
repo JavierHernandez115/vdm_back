@@ -1,5 +1,5 @@
 from django.db import models
-
+from decimal import Decimal
 # Create your models here.
 class Empleado(models.Model):
     nombre = models.CharField(max_length=100)
@@ -41,23 +41,34 @@ class Salario(models.Model):
 class Prestamo(models.Model):
     empleado = models.ForeignKey(Empleado, on_delete=models.CASCADE)
     monto_prestamo = models.DecimalField(max_digits=10, decimal_places=2)
+    deuda_restante = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     abono_semanal = models.DecimalField(max_digits=10, decimal_places=2)
     razon = models.TextField()
     fecha_prestamo = models.DateField()
+    estatus = models.BooleanField(default=True)  # Indica si el préstamo sigue vigente
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        # Solo inicializar deuda_restante al monto_prestamo al crear un nuevo préstamo
+        if not self.pk and self.deuda_restante == 0.00:  # Si no existe en la BD (nuevo préstamo)
+            self.deuda_restante = self.monto_prestamo
+        super().save(*args, **kwargs)
 
 class Abono(models.Model):
     empleado = models.ForeignKey(Empleado, on_delete=models.CASCADE)
     prestamo = models.ForeignKey(Prestamo, on_delete=models.CASCADE)
     monto_abono = models.DecimalField(max_digits=10, decimal_places=2)
     fecha_abono = models.DateField()
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    deuda_restante = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal(0))  # Nuevo campo
+
+from django.db import models
+from django.contrib.postgres.fields import JSONField  # Para PostgreSQL, o usa TextField para otros
 
 class Pago(models.Model):
     empleado = models.ForeignKey(Empleado, on_delete=models.CASCADE)
     monto_a_pagar = models.DecimalField(max_digits=10, decimal_places=2)
     fecha_pago = models.DateField()
+    detalle = models.JSONField(default=list)  # Contiene el desglose del pago
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
