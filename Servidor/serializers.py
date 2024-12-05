@@ -39,9 +39,11 @@ class PrestamoSerializer(serializers.ModelSerializer):
 
 class AbonoSerializer(serializers.ModelSerializer):
     nombre_empleado = serializers.CharField(source='empleado.nombre', read_only=True)
+    razon_prestamo = serializers.CharField(source='prestamo.razon', read_only=True)  # Agrega la razón del préstamo
     class Meta:
         model = Abono
         fields = '__all__'
+        extra_fields = ['razon_prestamo']
 
 class PagoSerializer(serializers.ModelSerializer):
     nombre_empleado = serializers.CharField(source='empleado.nombre', read_only=True)

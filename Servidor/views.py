@@ -10,6 +10,81 @@ from .serializers import (
 )
 from django.shortcuts import get_object_or_404
 
+#Pagos por empleados
+@api_view(['GET'])
+def pagos_por_empleado(request,empleado_id):
+    try:
+        # Verificar que el empleado existe
+        empleado = Empleado.objects.get(id=empleado_id)
+    except Empleado.DoesNotExist:
+        return Response(
+            {"error": "Empleado no encontrado."},
+            status=status.HTTP_404_NOT_FOUND
+        )
+    # Filtrar los préstamos relacionados con el empleado
+    pagos = Pago.objects.filter(empleado=empleado)
+    
+    # Serializar los datos
+    serializer = PagoSerializer(pagos, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+#Vacaciones Tomadas por empleado
+@api_view(['GET'])
+def vacaciones_tomadas_por_empleado(request,empleado_id):
+    try:
+        # Verificar que el empleado existe
+        empleado = Empleado.objects.get(id=empleado_id)
+    except Empleado.DoesNotExist:
+        return Response(
+            {"error": "Empleado no encontrado."},
+            status=status.HTTP_404_NOT_FOUND
+        )
+    # Filtrar los préstamos relacionados con el empleado
+    vacaciones_tomadas = VacacionTomada.objects.filter(empleado=empleado)
+    
+    # Serializar los datos
+    serializer = VacacionTomadaSerializer(vacaciones_tomadas, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+#Abonos de cada empleado
+@api_view(['GET'])
+def abonos_por_empleado(request,empleado_id):
+    try:
+        # Verificar que el empleado existe
+        empleado = Empleado.objects.get(id=empleado_id)
+    except Empleado.DoesNotExist:
+        return Response(
+            {"error": "Empleado no encontrado."},
+            status=status.HTTP_404_NOT_FOUND
+        )
+    # Filtrar los préstamos relacionados con el empleado
+    abonos = Abono.objects.filter(empleado=empleado)
+    
+    # Serializar los datos
+    serializer = AbonoSerializer(abonos, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+
+#Prestamos de cada empleado
+@api_view(['GET'])
+def prestamos_por_empleado(request, empleado_id):
+    try:
+        # Verificar que el empleado existe
+        empleado = Empleado.objects.get(id=empleado_id)
+    except Empleado.DoesNotExist:
+        return Response(
+            {"error": "Empleado no encontrado."},
+            status=status.HTTP_404_NOT_FOUND
+        )
+    
+    # Filtrar los préstamos relacionados con el empleado
+    prestamos = Prestamo.objects.filter(empleado=empleado)
+    
+    # Serializar los datos
+    serializer = PrestamoSerializer(prestamos, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 #Asistencias por fechas
 @api_view(['GET'])
