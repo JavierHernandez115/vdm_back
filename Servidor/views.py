@@ -13,6 +13,30 @@ from .serializers import (
 )
 from django.shortcuts import get_object_or_404
 
+#Pagos por fechas
+@api_view(['GET'])
+def pagos_por_fecha(request, fecha):
+    """
+    Filtra los pagos por una fecha proporcionada en la URL y los serializa.
+    """
+    try:
+        fecha_parsed = datetime.strptime(fecha, "%Y-%m-%d").date()
+    except ValueError:
+        return Response({"error": "Formato de fecha inválido. Use 'YYYY-MM-DD'."}, status=400)
+
+    pagos = Pago.objects.filter(fecha_pago=fecha_parsed).order_by('id')
+    serializer = PagoSerializer(pagos, many=True)
+
+    return Response({
+        "fecha": str(fecha_parsed),
+        "pagos": serializer.data
+    })
+
+
+    # Convertir el defaultdict a un diccionario estándar
+    data = {str(fecha): pagos for fecha, pagos in pagos_agrupados.items()}
+    return JsonResponse(data)
+
 
 #Generar Pago
 @api_view(['POST'])
@@ -235,6 +259,8 @@ def empleado_detail(request, pk):
         empleado.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+
+# CRUD para Asistencias
 
 # CRUD para Asistencias
 @api_view(['GET', 'POST'])

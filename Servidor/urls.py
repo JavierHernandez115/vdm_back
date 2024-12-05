@@ -41,5 +41,6 @@ urlpatterns = [
     path('pagos/', views.pago_list, name='pago-list'),
     path('pagos/<int:pk>/', views.pago_detail, name='pago-detail'),
     path('empleado/<int:empleado_id>/registrar_pago/', views.registrar_pago, name='registrar_pago'),
+    path('pagos/<str:fecha>/', views.pagos_por_fecha, name='pagos_por_fecha'),
 
 ]

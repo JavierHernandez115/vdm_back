@@ -13,6 +13,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='asistencia',
             name='asistencia',
-            field=models.DateField(),
+            field=models.BooleanField(),
         ),
     ]

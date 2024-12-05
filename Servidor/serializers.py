@@ -8,6 +8,7 @@ class EmpleadoSerializer(serializers.ModelSerializer):
 
 class AsistenciaSerializer(serializers.ModelSerializer):
     nombre_empleado = serializers.CharField(source='empleado.nombre', read_only=True)
+    empleado=serializers.PrimaryKeyRelatedField(queryset=Empleado.objects.all())
     class Meta:
         model = Asistencia
         fields = '__all__'
